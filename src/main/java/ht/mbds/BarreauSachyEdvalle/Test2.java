@@ -18,7 +18,7 @@ public class Test2 {
 
         ChatModel model = GoogleAiGeminiChatModel.builder()
                 .apiKey(apiKey)
-                .modelName("gemini-2.5-flash")
+                .modelName("gemini-2.5-flash-lite")
                 .temperature(0.7)
                 .build();
 
