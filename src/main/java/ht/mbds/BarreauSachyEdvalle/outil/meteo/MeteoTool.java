@@ -85,4 +85,49 @@ public class MeteoTool {
             throw new RuntimeException(e);
         }
     }
+    @Tool("""
+    Retourne la latitude et la longitude d'une ville à partir de son nom.
+    Si plusieurs villes existent avec ce nom, la première ville trouvée est utilisée.
+    Pour éviter l'ambiguïté, préciser le pays en anglais, par exemple Rabat,Morocco.
+    """)
+    public double[] getCoordonnees(
+            @P("Nom de la ville, par exemple Paris ou Rabat,Morocco") String ville) {
+
+        try {
+            String baseUrl = "https://geocoding-api.open-meteo.com/v1/search?name=";
+            String apiUri = baseUrl + ville.replace(" ", "%20");
+
+            HttpURLConnection connection =
+                    (HttpURLConnection) new URI(apiUri).toURL().openConnection();
+
+            connection.setRequestMethod("GET");
+
+            Scanner scanner = new Scanner(connection.getInputStream());
+            String response = scanner.useDelimiter("\\A").next();
+            scanner.close();
+
+            Gson gson = new Gson();
+            JsonObject jsonResponse = gson.fromJson(response, JsonObject.class);
+
+            if (jsonResponse.has("results")) {
+                JsonArray results = jsonResponse.getAsJsonArray("results");
+
+                if (!results.isEmpty()) {
+                    JsonObject premierResultat = results.get(0).getAsJsonObject();
+
+                    double latitude = premierResultat.get("latitude").getAsDouble();
+                    double longitude = premierResultat.get("longitude").getAsDouble();
+
+                    return new double[]{latitude, longitude};
+                }
+            }
+
+            throw new RuntimeException("Aucune coordonnée trouvée pour la ville : " + ville);
+
+        } catch (IOException e) {
+            throw new RuntimeException("Erreur lors de la récupération des coordonnées pour la ville : " + ville, e);
+        } catch (URISyntaxException e) {
+            throw new RuntimeException(e);
+        }
+    }
 }
